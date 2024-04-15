@@ -68,24 +68,11 @@ import { LoadChat, LoadConfig, LoadFunctions, SaveChat } from "@/lib/file-handle
 import MessageBubble from "@/components/ui/message-bubble"
 import infer from "@/lib/inference"
 import tool_use from "@/lib/function-calling"
+import { GlobalConfig, MessageType, ToolStatus } from "@/types/default"
 
-export interface GlobalConfig {
-  api_url?: string
-  api_key?: string
-  system_prompt?: string
-  wolfram_appid?: string
-  default_samplers?: object
-  default_tools?: object
+export let globalConfig: GlobalConfig = {
+  api_url: "http://127.0.0.1:5000" // default API URL
 }
-
-export interface GenParams {
-  temperature?: number
-  top_k?: number
-  top_p?: number
-  min_p?: number
-}
-
-export let globalConfig: GlobalConfig = {}
 export let functionList: Array<{ name: string ; description: string ; params: object}> = []
 
 export default function Home() {
@@ -93,8 +80,8 @@ export default function Home() {
   const { setTheme } = useTheme()
   const [isGenerating, setIsGenerating] = useState(false);
   const [inputValue, setInputValue] = useState("");
-  const [messages, setMessages] = useState<Array<{ role: string ; content: string }>>([]);
-  const [lastmessage, setLastMessage] = useState<Array<{ role: string ; content: string }>>([]);
+  const [messages, setMessages] = useState<MessageType[]>([]);
+  const [lastmessage, setLastMessage] = useState<MessageType[]>([]);
 
   //Gen param states
   const [genParams, setGenParams] = useState({
@@ -106,7 +93,7 @@ export default function Home() {
 
   //Tool use states
   const [useTools, setUseTools] = useState(true);
-  const [toolStatus, setToolStatus] = useState({
+  const [toolStatus, setToolStatus] = useState<ToolStatus>({
     directly_answer: true,
     web_search: true,
     grab_text: true,
@@ -132,7 +119,10 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    document.getElementById("outputContainer").scrollTop = document.getElementById("outputContainer").scrollHeight;
+    const outputContainer = document.getElementById("outputContainer")
+    if (outputContainer) {
+      outputContainer.scrollTop = outputContainer.scrollHeight
+    }
   }, [messages, lastmessage])
 
   const sendMessage = async (message: string) => {

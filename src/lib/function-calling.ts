@@ -1,12 +1,12 @@
 "use server"
 
-import { GlobalConfig } from "@/app/page";
+import { GlobalConfig, MessageType, ToolStatus } from "@/types/default";
 import { getWolfram } from "./wolframalpha";
 import { webSearch } from "./websearch";
 import { scrape, shorten } from "./scrape";
 import { fetchAbstracts, pubMedSearch } from "./pubmed";
 
-export default async function tool_use(messages: Array<{ role: string ; content: string }>, globalConfig: GlobalConfig, functionList: Array<{ name: string ; description: string ; params: object}>, toolStatus: object) {
+export default async function tool_use(messages: MessageType[], globalConfig: GlobalConfig, functionList: Array<{ name: string ; description: string ; params: object}>, toolStatus: ToolStatus) {
 
     // Determine available tools
     let activeTools: Array<{ name: string ; description: string ; params: object}> = [];
@@ -41,8 +41,8 @@ export default async function tool_use(messages: Array<{ role: string ; content:
         method: "POST",
         headers: {
           "Content-type": "application/json; charset=UTF-8",
-          "authorization": globalConfig?.api_key,
-          "x-api-key": globalConfig?.api_key,
+          "authorization": globalConfig.api_key ?? "",
+          "x-api-key": globalConfig.api_key ?? "",
         },
         body: JSON.stringify({
           "messages": [{ role: "system", content: globalConfig.system_prompt}, ...messages, { role: "system", content: tool_use_prompt}],
@@ -62,10 +62,14 @@ export default async function tool_use(messages: Array<{ role: string ; content:
     }
 
     // Ask the model for tool params
-    const param_prompt = `Given the preceding context, select the most appropriate parameters for the tool "${chosen_fn}" to facilitate answering the user's request. Respond in JSON:\n\nTool: ${chosen_fn}\nDescription: ${functionList.find((element) => element.name == chosen_fn).description}\nParameters: ${JSON.stringify(functionList.find((element) => element.name == chosen_fn).params, null, 2)}`;
-    let chosen_fn_params = {}
-    for (const param in functionList.find((element) => element.name == chosen_fn).params) {
-        chosen_fn_params[param] = { "type": "string"}
+    let param_prompt = ""
+    let chosen_fn_params: {[key:string] : {[key : string]: string | string[]}} = {}
+    const chosen_fn_obj = functionList.find((element) => element.name == chosen_fn)
+    if (chosen_fn_obj) {
+      param_prompt = `Given the preceding context, select the most appropriate parameters for the tool "${chosen_fn}" to facilitate answering the user's request. Respond in JSON:\n\nTool: ${chosen_fn}\nDescription: ${chosen_fn_obj.description}\nParameters: ${JSON.stringify(chosen_fn_obj.params, null, 2)}`;
+      for (const param in chosen_fn_obj.params) {
+        chosen_fn_params[param] = { "type": "string" }
+      }
     }
     const params_schema = {
         "type": "object",
@@ -84,8 +88,8 @@ export default async function tool_use(messages: Array<{ role: string ; content:
         method: "POST",
         headers: {
             "Content-type": "application/json; charset=UTF-8",
-            "authorization": globalConfig?.api_key,
-            "x-api-key": globalConfig?.api_key,
+            "authorization": globalConfig.api_key ?? "",
+            "x-api-key": globalConfig.api_key ?? "",
         },
         body: JSON.stringify({
             "messages": [{ role: "system", content: globalConfig.system_prompt}, ...messages, { role: "system", content: param_prompt}],
@@ -94,7 +98,7 @@ export default async function tool_use(messages: Array<{ role: string ; content:
             "top_k": 1,
             "json_schema": params_schema
         })
-        }
+      }
     )
     responseData = await(r.json());
     const chosen_params = JSON.parse(responseData.choices[0].message.content).params;

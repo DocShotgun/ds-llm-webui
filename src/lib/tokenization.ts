@@ -22,7 +22,7 @@ export async function encode (text: string, api_url: string, api_key: string = "
     return responseData.tokens
 }
 
-export async function decode (tokens: Array<number>, api_url: string, api_key: string = "") {
+export async function decode (tokens: number[], api_url: string, api_key: string = "") {
     const r = await fetch(api_url + "/v1/token/decode",
         {
             method: "POST",
