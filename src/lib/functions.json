@@ -1,0 +1,28 @@
+[
+    {
+        "name": "directly_answer",
+        "description": "Answer with the AI assistant's standard capabilities. This tool should be used when no additional tool is needed to adequately answer the user's request.",
+        "params": {}
+    },
+    {
+        "name": "web_search",
+        "description": "Use a standard internet search engine to research the topic. Use only when the answer is beyond the assistant's capabilities.",
+        "params": {
+            "keywords": "A comma separated list of keywords to be passed to the search engine."
+        }
+    },
+    {
+        "name": "grab_text",
+        "description": "This tool fetches the raw text content of a webpage. Use only when needing to analyze the content of a web link provided by the user or in the preceding context.",
+        "params": {
+            "url": "The target URL to fetch (i.e. https://www.example1.com)."
+        }
+    },
+    {
+        "name": "wolfram_alpha",
+        "description": "This uses Wolfram Alpha to solve a math-adjacent query and returns the result.",
+        "params": {
+            "query": "A valid Wolfram alpha formatted query. Remember to specify if a plot or graph is required and has been requested."
+        }
+    }
+]

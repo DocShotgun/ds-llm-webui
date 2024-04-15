@@ -1,113 +1,465 @@
-import Image from "next/image";
+"use client"
+
+import React, { useState, useEffect } from "react"
+import {
+  Bird,
+  Book,
+  Bot,
+  Code2,
+  CornerDownLeft,
+  Hourglass,
+  LifeBuoy,
+  Mic,
+  Moon,
+  Paperclip,
+  Rabbit,
+  Settings,
+  Settings2,
+  Share,
+  SquareTerminal,
+  SquareUser,
+  Sun,
+  Triangle,
+  Turtle,
+  Wrench,
+} from "lucide-react"
+import { useTheme } from "next-themes"
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { Slider } from "@/components/ui/slider"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Switch } from "@/components/ui/switch"
+
+import { LoadChat, LoadConfig, LoadFunctions, SaveChat } from "@/lib/file-handler"
+import MessageBubble from "@/components/ui/message-bubble"
+import infer from "@/lib/inference"
+import tool_use from "@/lib/function-calling"
+
+export interface GlobalConfig {
+  api_url?: string
+  api_key?: string
+  system_prompt?: string
+  wolfram_appid?: string
+  default_samplers?: object
+  default_tools?: object
+}
+
+export interface GenParams {
+  temperature?: number
+  top_k?: number
+  top_p?: number
+  min_p?: number
+}
+
+export let globalConfig: GlobalConfig = {}
+export let functionList: Array<{ name: string ; description: string ; params: object}> = []
 
 export default function Home() {
+
+  const { setTheme } = useTheme()
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [messages, setMessages] = useState<Array<{ role: string ; content: string }>>([]);
+  const [lastmessage, setLastMessage] = useState<Array<{ role: string ; content: string }>>([]);
+
+  //Gen param states
+  const [genParams, setGenParams] = useState({
+    temperature: 0.7,
+    top_k: 0,
+    top_p: 1,
+    min_p: 0.1
+  })
+
+  //Tool use states
+  const [useTools, setUseTools] = useState(true);
+  const [toolStatus, setToolStatus] = useState({
+    directly_answer: true,
+    web_search: true,
+    grab_text: true,
+    wolfram_alpha: true
+  });
+
+  useEffect(() => {
+    const getConfig = async () => {
+      globalConfig = await(LoadConfig());
+      setGenParams({...genParams, ...globalConfig.default_samplers});
+      setToolStatus({...toolStatus, ...globalConfig.default_tools});
+    }
+    const getFunctions = async () => {
+      functionList = await(LoadFunctions());
+    }
+    const getChatHistory = async () => {
+      setMessages(await(LoadChat()));
+    }
+    getConfig();
+    getFunctions();
+    getChatHistory();
+  }, [])
+
+  useEffect(() => {
+    document.getElementById("outputContainer").scrollTop = document.getElementById("outputContainer").scrollHeight;
+  }, [messages, lastmessage])
+
+  const setEnabledFunctions = () => {
+    l
+  }
+
+  const sendMessage = async (message: string) => {
+    let updatedMessages = [...messages, { role: "user", content: message }];
+    setMessages(updatedMessages);
+    let response = "";
+    let tool_output;
+    if (useTools) {
+      tool_output = await(tool_use(updatedMessages, globalConfig, functionList, toolStatus));
+    };
+    if (tool_output) {
+      updatedMessages = [...updatedMessages, { role: "system", content: tool_output}];
+      setMessages(updatedMessages);
+      const responseGenerator = infer(updatedMessages, globalConfig.api_url, globalConfig.api_key, globalConfig.system_prompt, genParams);
+      for await (const chunk of responseGenerator) {
+        response += chunk;
+        setLastMessage([{role: "assistant", content: response}]);
+      };
+    }
+    else {
+      const responseGenerator = infer(updatedMessages, globalConfig.api_url, globalConfig.api_key, globalConfig.system_prompt, genParams);
+      for await (const chunk of responseGenerator) {
+        response += chunk;
+        setLastMessage([{role: "assistant", content: response}]);
+      };
+    };
+    setLastMessage([]);
+    setMessages([...updatedMessages, { role: "assistant", content: response }]);
+    SaveChat([...updatedMessages, { role: "assistant", content: response }]);
+    setIsGenerating(false);
+  };
+
+  const handleSubmit = () => {
+    if (inputValue.length == 0) return;
+    setIsGenerating(true);
+    sendMessage(inputValue);
+    setInputValue("");
+  }
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+    <div className="grid h-screen w-full pl-[56px]">
+      <title>DS LLM WebUI</title>
+      <aside className="inset-y fixed  left-0 z-20 flex h-full flex-col border-r">
+        <div className="border-b p-2">
+          <Button variant="outline" size="icon" aria-label="Home" onClick={async () => {
+            //console.log(await(webSearch("10 densest elemental metals")))
+            //console.log(await(encode("Poopyboop", globalConfig.api_url, globalConfig.api_key)))
+            //console.log(await(scrape("https://github.blog/2019-03-29-leader-spotlight-erin-spiceland/")))
+          }}>
+            <Triangle className="size-5 fill-foreground" />
+          </Button>
         </div>
+        <nav className="grid gap-1 p-2">
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-lg"
+                aria-label="Settings"
+              >
+                <Settings2 className="size-5" />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <div className="mx-auto w-full max-w-lg">
+                <DrawerHeader>
+                  <DrawerTitle>Inference Settings</DrawerTitle>
+                  <DrawerDescription>Configure LLM inference parameters</DrawerDescription>
+                </DrawerHeader>
+                <div className="flex-col items-center justify-center">
+                  <div className="flex py-5">
+                    <Label htmlFor="temperature" className="w-1/4 px-2.5">Temperature</Label>
+                    <Slider
+                      value={[genParams.temperature]}
+                      min={0}
+                      max={5}
+                      step={0.05}
+                      className="w-1/2"
+                      onValueChange={(value) => setGenParams({...genParams, temperature: value[0]})}
+                    />
+                    <Label htmlFor="temperatureNum" className="w-1/4 px-2.5">{genParams.temperature}</Label>
+                  </div>
+                  <div className="flex py-5">
+                    <Label htmlFor="topk" className="w-1/4 px-2.5">Top-K</Label>
+                    <Slider
+                      value={[genParams.top_k]}
+                      min={0}
+                      max={200}
+                      step={1}
+                      className="w-1/2"
+                      onValueChange={(value) => setGenParams({...genParams, top_k: value[0]})}
+                    />
+                    <Label htmlFor="topkNum" className="w-1/4 px-2.5">{genParams.top_k}</Label>
+                  </div>
+                  <div className="flex py-5">
+                    <Label htmlFor="topp" className="w-1/4 px-2.5">Top-P</Label>
+                    <Slider
+                      value={[genParams.top_p]}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      className="w-1/2"
+                      onValueChange={(value) => setGenParams({...genParams, top_p: value[0]})}
+                    />
+                    <Label htmlFor="toppNum" className="w-1/4 px-2.5">{genParams.top_p}</Label>
+                  </div>
+                  <div className="flex py-5">
+                    <Label htmlFor="minp" className="w-1/4 px-2.5">Min-P</Label>
+                    <Slider
+                      value={[genParams.min_p]}
+                      min={0}
+                      max={1}
+                      step={0.01}
+                      className="w-1/2"
+                      onValueChange={(value) => setGenParams({...genParams, min_p: value[0]})}
+                    />
+                    <Label htmlFor="minpNum" className="w-1/4 px-2.5">{genParams.min_p}</Label>
+                  </div>
+                </div>
+                <DrawerFooter>
+                  <DrawerClose asChild>
+                    <Button variant="outline">Close</Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </div>
+            </DrawerContent>
+          </Drawer>
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-lg"
+                aria-label="Tool Use"
+              >
+                <Wrench className="size-5" />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent>
+              <div className="mx-auto w-full max-w-lg">
+                <DrawerHeader>
+                  <DrawerTitle>Tool Use Settings</DrawerTitle>
+                  <DrawerDescription>Configure assistant function-calling settings</DrawerDescription>
+                </DrawerHeader>
+                <div className="flex-col items-center justify-center">
+                  <div className="flex py-5">
+                    <Label htmlFor="tool-use" className="w-1/2 px-2.5">Tool Use</Label>
+                    <Switch checked={useTools} onCheckedChange={(checked) => {
+                      setUseTools(checked);
+                    }}/>
+                  </div>
+                  <Separator className="my-2.5"/>
+                  <div className="flex py-5">
+                    <Label htmlFor="web-search" className="w-1/2 px-2.5">Internet Search</Label>
+                    <Switch checked={toolStatus.web_search} disabled={!useTools} onCheckedChange={(checked) => {
+                      setToolStatus({...toolStatus, web_search: checked});
+                    }}/>
+                  </div>
+                  <div className="flex py-5">
+                    <Label htmlFor="grab-text" className="w-1/2 px-2.5">Website Scrape</Label>
+                    <Switch checked={toolStatus.grab_text} disabled={!useTools} onCheckedChange={(checked) => {
+                      setToolStatus({...toolStatus, grab_text: checked});
+                    }}/>
+                  </div>
+                  <div className="flex py-5">
+                    <Label htmlFor="wolfram-alpha" className="w-1/2 px-2.5">Wolfram Alpha</Label>
+                    <Switch checked={toolStatus.wolfram_alpha} disabled={!useTools} onCheckedChange={(checked) => {
+                      setToolStatus({...toolStatus, wolfram_alpha: checked});
+                    }}/>
+                  </div>
+                </div>
+                <DrawerFooter>
+                  <DrawerClose asChild>
+                    <Button variant="outline">Close</Button>
+                  </DrawerClose>
+                </DrawerFooter>
+              </div>
+            </DrawerContent>
+          </Drawer>
+        </nav>
+        <nav className="mt-auto grid gap-1 p-2">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="mt-auto rounded-lg hidden"
+                aria-label="Help"
+              >
+                <LifeBuoy className="size-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={5}>
+              Help
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="mt-auto rounded-lg hidden"
+                aria-label="Account"
+              >
+                <SquareUser className="size-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={5}>
+              Account
+            </TooltipContent>
+          </Tooltip>
+        </nav>
+      </aside>
+      <div className="flex flex-col h-screen">
+        <header className="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4">
+          <h1 className="text-xl font-semibold"></h1>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon" className="ml-auto">
+                <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setTheme("light")}>
+                Light
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("dark")}>
+                Dark
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTheme("system")}>
+                System
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
+        <main className="grid flex-1 gap-4 overflow-auto p-4 md:grid-cols-2">
+          <div className="relative flex h-full min-h-[50vh] flex-col rounded-xl bg-muted/50 p-4 lg:col-span-2">
+            <div id="outputContainer" className="output-container mb-5" >
+            {messages.map((messageObj) => (
+              <MessageBubble key={messageObj.content} {...messageObj} />
+            ))}
+            {lastmessage.map((messageObj) => (
+              <MessageBubble key={messageObj.content} {...messageObj} />
+            ))}
+            </div>
+            <form
+              className="relative overflow-hidden rounded-lg border bg-background focus-within:ring-1 focus-within:ring-ring" x-chunk="dashboard-03-chunk-1"
+            >
+              <Label htmlFor="message" className="sr-only">
+                Message
+              </Label>
+              <Textarea
+                placeholder="Type your message here..."
+                value={inputValue}
+                className="min-h-12 resize-none border-0 p-3 shadow-none focus-visible:ring-0"
+                disabled={isGenerating}
+                onChange={(event) => {
+                  setInputValue(event.target.value)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    handleSubmit();
+                  }
+                }}
+              />
+              <div className="flex items-center p-3 pt-0 justify-between">
+                <div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="hidden">
+                        <Paperclip className="size-4" />
+                        <span className="sr-only">Attach file</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Attach File</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="icon" className="hidden">
+                        <Mic className="size-4" />
+                        <span className="sr-only">Use Microphone</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">Use Microphone</TooltipContent>
+                  </Tooltip>
+                </div>
+                <div className="space-x-2">
+                  <Button type="button" size="sm" className="ml-auto gap-1.5" disabled={isGenerating} onClick={handleSubmit}>
+                    Send Message
+                    <CornerDownLeft className="size-3.5" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button type="button" variant="destructive" size="sm" className="ml-auto gap-1.5" disabled={isGenerating}>
+                        Clear Chat
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently clear the current chat history.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => {
+                          setMessages([]);
+                          setLastMessage([]);
+                          SaveChat([]);
+                          }}>Continue
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </form>
+          </div>
+        </main>
       </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+    </div>
+  )
 }
