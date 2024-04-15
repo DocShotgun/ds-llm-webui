@@ -110,7 +110,8 @@ export default function Home() {
     directly_answer: true,
     web_search: true,
     grab_text: true,
-    wolfram_alpha: true
+    wolfram_alpha: true,
+    pubmed_search: true
   });
 
   useEffect(() => {
@@ -133,10 +134,6 @@ export default function Home() {
   useEffect(() => {
     document.getElementById("outputContainer").scrollTop = document.getElementById("outputContainer").scrollHeight;
   }, [messages, lastmessage])
-
-  const setEnabledFunctions = () => {
-    l
-  }
 
   const sendMessage = async (message: string) => {
     let updatedMessages = [...messages, { role: "user", content: message }];
@@ -181,9 +178,7 @@ export default function Home() {
       <aside className="inset-y fixed  left-0 z-20 flex h-full flex-col border-r">
         <div className="border-b p-2">
           <Button variant="outline" size="icon" aria-label="Home" onClick={async () => {
-            //console.log(await(webSearch("10 densest elemental metals")))
-            //console.log(await(encode("Poopyboop", globalConfig.api_url, globalConfig.api_key)))
-            //console.log(await(scrape("https://github.blog/2019-03-29-leader-spotlight-erin-spiceland/")))
+            // Test button
           }}>
             <Triangle className="size-5 fill-foreground" />
           </Button>
@@ -305,6 +300,12 @@ export default function Home() {
                     <Label htmlFor="wolfram-alpha" className="w-1/2 px-2.5">Wolfram Alpha</Label>
                     <Switch checked={toolStatus.wolfram_alpha} disabled={!useTools} onCheckedChange={(checked) => {
                       setToolStatus({...toolStatus, wolfram_alpha: checked});
+                    }}/>
+                  </div>
+                  <div className="flex py-5">
+                    <Label htmlFor="pubmed-search" className="w-1/2 px-2.5">PubMed</Label>
+                    <Switch checked={toolStatus.pubmed_search} disabled={!useTools} onCheckedChange={(checked) => {
+                      setToolStatus({...toolStatus, pubmed_search: checked});
                     }}/>
                   </div>
                 </div>

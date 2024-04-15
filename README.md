@@ -2,7 +2,7 @@
 
 A simple tool-use assistant for local LLMs powered by TabbyAPI. This should be considered heavily WIP and not intended for end-user usage at the moment, however it does have the following features:
 
-- Converse with an AI assistant via the chat completions endpoint of TabbyAPI, with a single persistent chat history and limited sampling options
+- Converse with an AI assistant via the chat completions endpoint of [TabbyAPI](https://github.com/theroyallab/tabbyAPI), with a single persistent chat history and limited sampling options
 - Function calling framework via constrained generation using JSON schema
 - Internet search using DuckDuckGo for search-augmented generation
 - Extract the text content of a webpage for augmented generation

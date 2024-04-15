@@ -12,6 +12,7 @@
     "default_tools": {
         "web_search": true,
         "grab_text": true,
-        "wolfram_alpha": true
+        "wolfram_alpha": true,
+        "pubmed_search": true
     }
 }

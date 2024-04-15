@@ -4,6 +4,7 @@ import { GlobalConfig } from "@/app/page";
 import { getWolfram } from "./wolframalpha";
 import { webSearch } from "./websearch";
 import { scrape, shorten } from "./scrape";
+import { fetchAbstracts, pubMedSearch } from "./pubmed";
 
 export default async function tool_use(messages: Array<{ role: string ; content: string }>, globalConfig: GlobalConfig, functionList: Array<{ name: string ; description: string ; params: object}>, toolStatus: object) {
 
@@ -131,6 +132,16 @@ export default async function tool_use(messages: Array<{ role: string ; content:
       }
       catch {
         function_output = "Web scrape failed. Please inform the user and then answer to the best of your ability."
+      }
+    }
+    else if (chosen_fn == "pubmed_search") {
+      try {
+        const article_ids = await(pubMedSearch(chosen_params.keywords, chosen_params.category, 5, "relevance"))
+        const abstracts = await(fetchAbstracts(article_ids))
+        function_output = `Use the following results from PubMed to augment your response:\n<results>\n${abstracts}\n</results>\nALWAYS provide citations for any sources utilized to formulate your response.`
+      }
+      catch {
+        function_output = "PubMed query failed. Please inform the user and then answer to the best of your ability."
       }
     }
 

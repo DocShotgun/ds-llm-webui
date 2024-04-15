@@ -15,5 +15,5 @@ export async function getWolfram(query: string, appid: string = "DEMO") {
         throw Error("Wolfram Alpha query failed. Please inform the user and then answer to the best of your ability.")
     }
     const result = await(r.text())
-    return result
+    return result.trim()
 }
