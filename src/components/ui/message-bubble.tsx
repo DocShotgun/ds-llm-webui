@@ -10,7 +10,7 @@ export default function MessageBubble( { role , content }) {
     if (role == "user") bubbleStyle = "user-message";
     else if (role == "assistant") bubbleStyle = "assistant-message";
     return (
-        <div className={`prose prose-neutral dark:prose-invert max-w-none leading-snug whitespace-pre-line ${bubbleStyle}`}>
+        <div className={`prose prose-gray dark:prose-invert max-w-none leading-snug whitespace-pre-line ${bubbleStyle}`}>
           <Markdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>{content}</Markdown>
         </div>
     );

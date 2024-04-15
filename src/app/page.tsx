@@ -174,7 +174,6 @@ export default function Home() {
 
   return (
     <div className="grid h-screen w-full pl-[56px]">
-      <title>DS LLM WebUI</title>
       <aside className="inset-y fixed  left-0 z-20 flex h-full flex-col border-r">
         <div className="border-b p-2">
           <Button variant="outline" size="icon" aria-label="Home" onClick={async () => {

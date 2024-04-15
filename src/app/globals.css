@@ -32,6 +32,11 @@
       --input: 214.3 31.8% 91.4%;
       --ring: 222.2 84% 4.9%;
 
+      --user-bubble: #B6C7DB;
+      --assistant-bubble: #A8ACB1;
+      --user-border: #B6C7DB;
+      --assistant-border: #A8ACB1;
+
       --radius: 0.5rem;
     }
 
@@ -63,6 +68,11 @@
       --border: 217.2 32.6% 17.5%;
       --input: 217.2 32.6% 17.5%;
       --ring: 212.7 26.8% 83.9%;
+
+      --user-bubble: #4974a5;
+      --assistant-bubble: #27303E;
+      --user-border: #4974a5;
+      --assistant-border: #27303E;
     }
 
     .output-container {
@@ -71,9 +81,9 @@
     }
 
     .user-message {
-      background-color:steelblue;
+      background-color: var(--user-bubble);
       margin: 10px 0 10px 30px;
-      border: 1px solid steelblue;
+      border: 1px solid var(--user-border);
       border-radius: 10px;
       padding: 10px;
       position: relative;
@@ -81,9 +91,9 @@
     }
 
     .assistant-message {
-      background-color: slategray;
+      background-color: var(--assistant-bubble);
       margin: 10px 30px 10px 0;
-      border: 1px solid slategray;
+      border: 1px solid var(--assistant-border);
       border-radius: 10px;
       padding: 10px;
       position: relative;
