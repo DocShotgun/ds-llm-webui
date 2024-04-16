@@ -54,6 +54,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Slider } from "@/components/ui/slider"
 import { Textarea } from "@/components/ui/textarea"
@@ -71,7 +72,9 @@ import tool_use from "@/lib/function-calling"
 import { GlobalConfig, MessageType, ToolStatus } from "@/types/default"
 
 export let globalConfig: GlobalConfig = {
-  api_url: "http://127.0.0.1:5000" // default API URL
+  api_url: "http://127.0.0.1:5000", // default API URL
+  max_seq_len: 16384, // default max sequence length
+  system_prompt: ""
 }
 export let functionList: Array<{ name: string ; description: string ; params: object}> = []
 
@@ -85,6 +88,7 @@ export default function Home() {
 
   //Gen param states
   const [genParams, setGenParams] = useState({
+    max_tokens: 2048,
     temperature: 0.7,
     top_k: 0,
     top_p: 1,
@@ -136,14 +140,14 @@ export default function Home() {
     if (tool_output) {
       updatedMessages = [...updatedMessages, { role: "system", content: tool_output}];
       setMessages(updatedMessages);
-      const responseGenerator = infer(updatedMessages, globalConfig.api_url, globalConfig.api_key, globalConfig.system_prompt, genParams);
+      const responseGenerator = infer(updatedMessages, globalConfig, genParams);
       for await (const chunk of responseGenerator) {
         response += chunk;
         setLastMessage([{role: "assistant", content: response}]);
       };
     }
     else {
-      const responseGenerator = infer(updatedMessages, globalConfig.api_url, globalConfig.api_key, globalConfig.system_prompt, genParams);
+      const responseGenerator = infer(updatedMessages, globalConfig, genParams);
       for await (const chunk of responseGenerator) {
         response += chunk;
         setLastMessage([{role: "assistant", content: response}]);
@@ -191,7 +195,24 @@ export default function Home() {
                   <DrawerDescription>Configure LLM inference parameters</DrawerDescription>
                 </DrawerHeader>
                 <div className="flex-col items-center justify-center">
-                  <div className="flex py-5">
+                  <div className="flex py-5 items-center">
+                    <Label htmlFor="max_tokens" className="w-1/4 px-2.5">Max Tokens</Label>
+                    <Slider
+                      value={[genParams.max_tokens]}
+                      min={1}
+                      max={globalConfig.max_seq_len}
+                      step={1}
+                      className="w-1/2"
+                      onValueChange={(value) => setGenParams({...genParams, max_tokens: value[0]})}
+                    />
+                    <Input type="number" value={genParams.max_tokens} className="w-1/4 ml-2.5" onChange={(event) => {
+                      let value = parseInt(event.target.value)
+                      if ( value > globalConfig.max_seq_len) value = globalConfig.max_seq_len
+                      if ( value < 1) value = 1
+                      setGenParams({...genParams, max_tokens: value})
+                      }}/>
+                  </div>
+                  <div className="flex py-5 items-center">
                     <Label htmlFor="temperature" className="w-1/4 px-2.5">Temperature</Label>
                     <Slider
                       value={[genParams.temperature]}
@@ -201,9 +222,14 @@ export default function Home() {
                       className="w-1/2"
                       onValueChange={(value) => setGenParams({...genParams, temperature: value[0]})}
                     />
-                    <Label htmlFor="temperatureNum" className="w-1/4 px-2.5">{genParams.temperature}</Label>
+                    <Input type="number" value={genParams.temperature} step={0.05} className="w-1/4 ml-2.5" onChange={(event) => {
+                      let value = parseFloat(event.target.value)
+                      if ( value > 5) value = 5
+                      if ( value < 0) value = 0
+                      setGenParams({...genParams, temperature: value})
+                      }}/>
                   </div>
-                  <div className="flex py-5">
+                  <div className="flex py-5 items-center">
                     <Label htmlFor="topk" className="w-1/4 px-2.5">Top-K</Label>
                     <Slider
                       value={[genParams.top_k]}
@@ -213,7 +239,12 @@ export default function Home() {
                       className="w-1/2"
                       onValueChange={(value) => setGenParams({...genParams, top_k: value[0]})}
                     />
-                    <Label htmlFor="topkNum" className="w-1/4 px-2.5">{genParams.top_k}</Label>
+                    <Input type="number" value={genParams.top_k} className="w-1/4 ml-2.5" onChange={(event) => {
+                      let value = parseInt(event.target.value)
+                      if ( value > 200) value = 200
+                      if ( value < 0) value = 0
+                      setGenParams({...genParams, top_k: value})
+                      }}/>
                   </div>
                   <div className="flex py-5">
                     <Label htmlFor="topp" className="w-1/4 px-2.5">Top-P</Label>
@@ -225,7 +256,12 @@ export default function Home() {
                       className="w-1/2"
                       onValueChange={(value) => setGenParams({...genParams, top_p: value[0]})}
                     />
-                    <Label htmlFor="toppNum" className="w-1/4 px-2.5">{genParams.top_p}</Label>
+                    <Input type="number" value={genParams.top_p} step={0.01} className="w-1/4 ml-2.5" onChange={(event) => {
+                      let value = parseFloat(event.target.value)
+                      if ( value > 1) value = 1
+                      if ( value < 0) value = 0
+                      setGenParams({...genParams, top_p: value})
+                      }}/>
                   </div>
                   <div className="flex py-5">
                     <Label htmlFor="minp" className="w-1/4 px-2.5">Min-P</Label>
@@ -237,7 +273,12 @@ export default function Home() {
                       className="w-1/2"
                       onValueChange={(value) => setGenParams({...genParams, min_p: value[0]})}
                     />
-                    <Label htmlFor="minpNum" className="w-1/4 px-2.5">{genParams.min_p}</Label>
+                    <Input type="number" value={genParams.min_p} step={0.01} className="w-1/4 ml-2.5" onChange={(event) => {
+                      let value = parseFloat(event.target.value)
+                      if ( value > 1) value = 1
+                      if ( value < 0) value = 0
+                      setGenParams({...genParams, min_p: value})
+                      }}/>
                   </div>
                 </div>
                 <DrawerFooter>

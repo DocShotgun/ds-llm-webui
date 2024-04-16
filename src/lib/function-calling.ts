@@ -5,6 +5,7 @@ import { getWolfram } from "./wolframalpha";
 import { webSearch } from "./websearch";
 import { scrape, shorten } from "./scrape";
 import { fetchAbstracts, pubMedSearch } from "./pubmed";
+import { shorten_prompt } from "./tokenization";
 
 export default async function tool_use(messages: MessageType[], globalConfig: GlobalConfig, functionList: Array<{ name: string ; description: string ; params: object}>, toolStatus: ToolStatus) {
 
@@ -45,9 +46,10 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
           "x-api-key": globalConfig.api_key ?? "",
         },
         body: JSON.stringify({
-          "messages": [{ role: "system", content: globalConfig.system_prompt}, ...messages, { role: "system", content: tool_use_prompt}],
+          "messages": globalConfig.system_prompt == "" ? (await shorten_prompt([...messages, { role: "system", content: tool_use_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, false)) : (await shorten_prompt([{ role: "system", content: globalConfig.system_prompt}, ...messages, { role: "system", content: tool_use_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, true)),
           "stream": false,
           "add_generation_prompt": true,
+          "max_tokens": 512,
           "top_k": 1,
           "json_schema": function_schema
         })
@@ -66,7 +68,7 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
     let chosen_fn_params: {[key:string] : {[key : string]: string | string[]}} = {}
     const chosen_fn_obj = functionList.find((element) => element.name == chosen_fn)
     if (chosen_fn_obj) {
-      param_prompt = `Given the preceding context, select the most appropriate parameters for the tool "${chosen_fn}" to facilitate answering the user's request. Respond in JSON:\n\nTool: ${chosen_fn}\nDescription: ${chosen_fn_obj.description}\nParameters: ${JSON.stringify(chosen_fn_obj.params, null, 2)}`;
+      param_prompt = `Given the preceding context, select the most appropriate parameters for the tool "${chosen_fn}" to facilitate answering the user's most recent request. Respond in JSON:\n\nTool: ${chosen_fn}\nDescription: ${chosen_fn_obj.description}\nParameters: ${JSON.stringify(chosen_fn_obj.params, null, 2)}`;
       for (const param in chosen_fn_obj.params) {
         chosen_fn_params[param] = { "type": "string" }
       }
@@ -92,9 +94,10 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
             "x-api-key": globalConfig.api_key ?? "",
         },
         body: JSON.stringify({
-            "messages": [{ role: "system", content: globalConfig.system_prompt}, ...messages, { role: "system", content: param_prompt}],
+            "messages": globalConfig.system_prompt == "" ? (await shorten_prompt([...messages, { role: "system", content: param_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, false)) : (await shorten_prompt([{ role: "system", content: globalConfig.system_prompt}, ...messages, { role: "system", content: param_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, true)),
             "stream": false,
             "add_generation_prompt": true,
+            "max_tokens": 512,
             "top_k": 1,
             "json_schema": params_schema
         })

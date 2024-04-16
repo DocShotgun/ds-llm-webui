@@ -1,6 +1,8 @@
 "use server"
 
-export async function encode (text: string, api_url: string, api_key: string = "") {
+import { MessageType } from "@/types/default"
+
+export async function encode (text: string | MessageType[], api_url: string, api_key: string = "") {
     const r = await fetch(api_url + "/v1/token/encode",
         {
             method: "POST",
@@ -42,4 +44,12 @@ export async function decode (tokens: number[], api_url: string, api_key: string
     }
     const responseData = await(r.json())
     return responseData.text
+}
+
+export async function shorten_prompt (prompt: MessageType[], max_seq_len: number, max_tokens: number, api_url: string, api_key: string = "", keepfirst: boolean = true) {
+    while ((await encode(prompt, api_url, api_key)).length >= (max_seq_len - max_tokens)) {
+        if (keepfirst) prompt.splice(1,1) // Remove the second element of the array, because the first one is the system prompt
+        else prompt.shift()
+    }
+    return prompt
 }

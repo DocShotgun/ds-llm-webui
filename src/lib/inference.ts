@@ -1,19 +1,20 @@
 "use client"
 //TODO: figure out how to get this working on server, likely with SSE stream between server and client
 
-import { GenParams } from "@/app/page";
+import { GenParams, GlobalConfig, MessageType } from "@/types/default";
+import { shorten_prompt } from "./tokenization";
 
-export default async function* infer(messages: Array<{ role: string ; content: string }>, api_url: string, api_key: string = "", system_prompt: string = "", genParams: GenParams) {
-    const response = await fetch(api_url + "/v1/chat/completions",
+export default async function* infer(messages: MessageType[], globalConfig: GlobalConfig, genParams: GenParams) {
+    const response = await fetch(globalConfig.api_url + "/v1/chat/completions",
       {
         method: "POST",
         headers: {
           "Content-type": "application/json; charset=UTF-8",
-          "authorization": api_key,
-          "x-api-key": api_key,
+          "authorization": globalConfig.api_key ?? "",
+          "x-api-key": globalConfig.api_key ?? "",
         },
         body: JSON.stringify({
-          "messages": system_prompt == "" ? messages : [{ role: "system", content: system_prompt}, ...messages],
+          "messages": globalConfig.system_prompt == "" ? (await shorten_prompt(messages, globalConfig.max_seq_len, genParams.max_tokens, globalConfig.api_url, globalConfig.api_key, false)) : (await shorten_prompt([{ role: "system", content: globalConfig.system_prompt}, ...messages], globalConfig.max_seq_len, genParams.max_tokens, globalConfig.api_url, globalConfig.api_key, true)),
           "stream": true,
           "add_generation_prompt": true,
           "temperature_last": true,

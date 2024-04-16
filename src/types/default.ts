@@ -3,7 +3,8 @@
 export interface GlobalConfig {
     api_url: string
     api_key?: string
-    system_prompt?: string
+    max_seq_len: number
+    system_prompt: string
     wolfram_appid?: string
     default_samplers?: GenParams
     default_tools?: ToolStatus
