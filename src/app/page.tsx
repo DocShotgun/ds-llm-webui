@@ -158,8 +158,8 @@ export default function Home() {
   }
 
   return (
-    <div className="grid h-screen w-full">
-      <div className="flex flex-col h-screen">
+    <div className="grid h-dvh w-full">
+      <div className="flex flex-col h-dvh">
         <header className="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4">
           <div>
             <Button variant="outline" size="icon" aria-label="Home" className="mr-auto" onClick={async () => {
