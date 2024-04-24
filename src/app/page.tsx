@@ -70,11 +70,13 @@ import MessageBubble from "@/components/ui/message-bubble"
 import tool_use from "@/lib/function-calling"
 import { GenParams, GlobalConfig, MessageType, ToolStatus } from "@/types/default"
 import infer_client from "@/lib/inference-client"
+import parse_macros from "@/lib/prompter"
 
 export let globalConfig: GlobalConfig = {
   api_url: "http://127.0.0.1:5000", // default API URL
   max_seq_len: 16384, // default max sequence length
-  system_prompt: ""
+  system_prompt: "",
+  system_prompt_parsed: "",
 }
 export let functionList: Array<{ name: string ; description: string ; params: object}> = []
 
@@ -130,6 +132,7 @@ export default function Home() {
   }, [messages, lastmessage])
 
   const sendMessage = async (message: string) => {
+    globalConfig.system_prompt_parsed = parse_macros(globalConfig.system_prompt);
     let updatedMessages = [...messages, { role: "user", content: message }];
     setMessages(updatedMessages);
     let response = "";

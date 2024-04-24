@@ -14,7 +14,7 @@ export default async function* infer(messages: MessageType[], globalConfig: Glob
           "x-api-key": globalConfig.api_key ?? "",
         },
         body: JSON.stringify({
-          "messages": globalConfig.system_prompt == "" ? (await shorten_prompt(messages, globalConfig.max_seq_len, genParams.max_tokens, globalConfig.api_url, globalConfig.api_key, false)) : (await shorten_prompt([{ role: "system", content: globalConfig.system_prompt}, ...messages], globalConfig.max_seq_len, genParams.max_tokens, globalConfig.api_url, globalConfig.api_key, true)),
+          "messages": globalConfig.system_prompt_parsed == "" ? (await shorten_prompt(messages, globalConfig.max_seq_len, genParams.max_tokens, globalConfig.api_url, globalConfig.api_key, false)) : (await shorten_prompt([{ role: "system", content: globalConfig.system_prompt_parsed}, ...messages], globalConfig.max_seq_len, genParams.max_tokens, globalConfig.api_url, globalConfig.api_key, true)),
           "stream": true,
           "add_generation_prompt": true,
           "temperature_last": true,

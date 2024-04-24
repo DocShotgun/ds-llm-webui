@@ -32,6 +32,6 @@ export async function LoadChat() {
   }
 }
 
-export async function SaveChat(messages: MessageType) {
+export async function SaveChat(messages: MessageType[]) {
   fs.writeFile(process.cwd() + '/userdata/chat.json', JSON.stringify(messages, null, 2), 'utf8')
 }

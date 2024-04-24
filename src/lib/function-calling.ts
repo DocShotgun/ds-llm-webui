@@ -46,7 +46,7 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
           "x-api-key": globalConfig.api_key ?? "",
         },
         body: JSON.stringify({
-          "messages": globalConfig.system_prompt == "" ? (await shorten_prompt([...messages, { role: "system", content: tool_use_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, false)) : (await shorten_prompt([{ role: "system", content: globalConfig.system_prompt}, ...messages, { role: "system", content: tool_use_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, true)),
+          "messages": globalConfig.system_prompt_parsed == "" ? (await shorten_prompt([...messages, { role: "system", content: tool_use_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, false)) : (await shorten_prompt([{ role: "system", content: globalConfig.system_prompt_parsed}, ...messages, { role: "system", content: tool_use_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, true)),
           "stream": false,
           "add_generation_prompt": true,
           "max_tokens": 512,
@@ -57,6 +57,7 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
     )
     let responseData = await(r.json());
     const chosen_fn = JSON.parse(responseData.choices[0].message.content).function;
+    console.log(`Selected function: ${chosen_fn}`);
 
     // Just return and do standard inference if directly_answer is chosen
     if (chosen_fn == "directly_answer") {
@@ -94,7 +95,7 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
             "x-api-key": globalConfig.api_key ?? "",
         },
         body: JSON.stringify({
-            "messages": globalConfig.system_prompt == "" ? (await shorten_prompt([...messages, { role: "system", content: param_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, false)) : (await shorten_prompt([{ role: "system", content: globalConfig.system_prompt}, ...messages, { role: "system", content: param_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, true)),
+            "messages": globalConfig.system_prompt_parsed == "" ? (await shorten_prompt([...messages, { role: "system", content: param_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, false)) : (await shorten_prompt([{ role: "system", content: globalConfig.system_prompt_parsed}, ...messages, { role: "system", content: param_prompt}], globalConfig.max_seq_len, 512, globalConfig.api_url, globalConfig.api_key, true)),
             "stream": false,
             "add_generation_prompt": true,
             "max_tokens": 512,
@@ -105,6 +106,7 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
     )
     responseData = await(r.json());
     const chosen_params = JSON.parse(responseData.choices[0].message.content).params;
+    console.log(`Selected parameters:\n${JSON.stringify(chosen_params, null, 2)}`)
 
     // Use chosen_func and chosen_params to execute function call
     let function_output = "No tool results available. Please inform the user and then answer to the best of your ability."
