@@ -26,6 +26,14 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
   Drawer,
   DrawerClose,
   DrawerContent,
@@ -162,11 +170,34 @@ export default function Home() {
       <div className="flex flex-col h-dvh">
         <header className="sticky top-0 z-10 flex h-[57px] items-center gap-1 border-b bg-background px-4">
           <div>
-            <Button variant="outline" size="icon" aria-label="Home" className="mr-auto" onClick={async () => {
-              // Test button
-            }}>
-              <Triangle className="size-5 fill-foreground" />
-            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="icon" aria-label="Home" className="mr-auto">
+                  <Triangle className="size-5 fill-foreground" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>DS LLM WebUI</DialogTitle>
+                  <DialogDescription>
+                  A simple tool-use assistant for local LLMs powered by TabbyAPI.
+                  </DialogDescription>
+                </DialogHeader>
+                  <Separator className="my-2.5"/>
+                  <div>
+                    <p>
+                      <a href="https://github.com/DocShotgun/ds-llm-webui" className="font-medium text-primary underline">
+                        GitHub - DS LLM WebUI
+                      </a>
+                    </p>
+                    <p>
+                      <a href="https://github.com/theroyallab/tabbyAPI" className="font-medium text-primary underline">
+                        GitHub - TabbyAPI
+                      </a>
+                    </p>
+                  </div>
+              </DialogContent>
+            </Dialog>
           </div>
           <div className="ml-auto space-x-2">
           <Drawer>
