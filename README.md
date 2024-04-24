@@ -7,6 +7,7 @@ A simple tool-use assistant for local LLMs powered by TabbyAPI. This should be c
 - Internet search using DuckDuckGo for search-augmented generation
 - Extract the text content of a webpage for augmented generation
 - Use the Wolfram Alpha LLM API for relevant queries
+- Search PubMed via the NCBI E-utilities API for relevant queries
 
 Mileage may vary depending on the capabilities of the LLM itself. Intended to be used with [CohereForAI/c4ai-command-r-plus](https://huggingface.co/CohereForAI/c4ai-command-r-plus). Make a copy of `userdata/config.example.json` and rename it to `config.json`.
 
