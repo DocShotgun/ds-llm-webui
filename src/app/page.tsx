@@ -67,9 +67,9 @@ import { Switch } from "@/components/ui/switch"
 
 import { LoadChat, LoadConfig, LoadFunctions, SaveChat } from "@/lib/file-handler"
 import MessageBubble from "@/components/ui/message-bubble"
-import infer from "@/lib/inference"
 import tool_use from "@/lib/function-calling"
-import { GlobalConfig, MessageType, ToolStatus } from "@/types/default"
+import { GenParams, GlobalConfig, MessageType, ToolStatus } from "@/types/default"
+import infer_client from "@/lib/inference-client"
 
 export let globalConfig: GlobalConfig = {
   api_url: "http://127.0.0.1:5000", // default API URL
@@ -87,7 +87,7 @@ export default function Home() {
   const [lastmessage, setLastMessage] = useState<MessageType[]>([]);
 
   //Gen param states
-  const [genParams, setGenParams] = useState({
+  const [genParams, setGenParams] = useState<GenParams>({
     max_tokens: 2048,
     temperature: 0.7,
     top_k: 0,
@@ -140,14 +140,14 @@ export default function Home() {
     if (tool_output) {
       updatedMessages = [...updatedMessages, { role: "system", content: tool_output}];
       setMessages(updatedMessages);
-      const responseGenerator = infer(updatedMessages, globalConfig, genParams);
+      const responseGenerator = infer_client(updatedMessages, globalConfig, genParams);
       for await (const chunk of responseGenerator) {
         response += chunk;
         setLastMessage([{role: "assistant", content: response}]);
       };
     }
     else {
-      const responseGenerator = infer(updatedMessages, globalConfig, genParams);
+      const responseGenerator = infer_client(updatedMessages, globalConfig, genParams);
       for await (const chunk of responseGenerator) {
         response += chunk;
         setLastMessage([{role: "assistant", content: response}]);

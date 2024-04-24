@@ -1,5 +1,5 @@
-"use client"
-//TODO: figure out how to get this working on server, likely with SSE stream between server and client
+// Server side of the inference function
+"use server"
 
 import { GenParams, GlobalConfig, MessageType } from "@/types/default";
 import { shorten_prompt } from "./tokenization";
