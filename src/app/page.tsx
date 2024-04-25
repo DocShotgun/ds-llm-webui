@@ -76,6 +76,7 @@ export let globalConfig: GlobalConfig = {
   max_seq_len: 16384, // default max sequence length
   system_prompt: "",
   system_prompt_parsed: "",
+  response_prefix: "",
 }
 export let functionList: Array<{ name: string ; description: string ; params: object}> = []
 let abortController = new AbortController();

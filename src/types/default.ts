@@ -6,6 +6,7 @@ export interface GlobalConfig {
     max_seq_len: number
     system_prompt: string
     system_prompt_parsed: string
+    response_prefix: string
     wolfram_appid?: string
     default_samplers?: GenParams
     default_tools?: ToolStatus

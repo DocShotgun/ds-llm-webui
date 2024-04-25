@@ -20,6 +20,7 @@ export default async function* infer(messages: MessageType[], globalConfig: Glob
           "stream": true,
           "add_generation_prompt": true,
           "temperature_last": true,
+          "response_prefix": globalConfig.response_prefix,
           ...genParams
         }),
         signal: signal
