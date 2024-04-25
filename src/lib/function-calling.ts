@@ -6,8 +6,12 @@ import { webSearch } from "./websearch";
 import { scrape, shorten } from "./scrape";
 import { fetchAbstracts, pubMedSearch } from "./pubmed";
 import { shorten_prompt } from "./tokenization";
+import { serverAbortController } from "./abort";
 
 export default async function tool_use(messages: MessageType[], globalConfig: GlobalConfig, functionList: Array<{ name: string ; description: string ; params: object}>, toolStatus: ToolStatus) {
+
+    // Set abort controller
+    const signal = serverAbortController.signal;
 
     // Determine available tools
     let activeTools: Array<{ name: string ; description: string ; params: object}> = [];
@@ -17,6 +21,7 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
       };
     };
     if (activeTools.length <= 1) return null; // Just return and do standard inference if no active tools (besides directly_answer)
+    signal.throwIfAborted();
 
     // Ask the model which tool to use
     let tool_use_prompt = "Given the preceding context and the following list of available tools, select the most appropriate tool to facilitate answering the user's request. Respond in JSON:"
@@ -52,12 +57,14 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
           "max_tokens": 512,
           "top_k": 1,
           "json_schema": function_schema
-        })
+        }),
+        signal
       }
     )
     let responseData = await(r.json());
     const chosen_fn = JSON.parse(responseData.choices[0].message.content).function;
     console.log(`Selected function: ${chosen_fn}`);
+    signal.throwIfAborted();
 
     // Just return and do standard inference if directly_answer is chosen
     if (chosen_fn == "directly_answer") {
@@ -101,12 +108,14 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
             "max_tokens": 512,
             "top_k": 1,
             "json_schema": params_schema
-        })
+        }),
+        signal
       }
     )
     responseData = await(r.json());
     const chosen_params = JSON.parse(responseData.choices[0].message.content).params;
     console.log(`Selected parameters:\n${JSON.stringify(chosen_params, null, 2)}`)
+    signal.throwIfAborted();
 
     // Use chosen_func and chosen_params to execute function call
     let function_output = "No tool results available. Please inform the user and then answer to the best of your ability."

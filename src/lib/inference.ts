@@ -3,8 +3,10 @@
 
 import { GenParams, GlobalConfig, MessageType } from "@/types/default";
 import { shorten_prompt } from "./tokenization";
+import { serverAbortController } from "./abort";
 
 export default async function* infer(messages: MessageType[], globalConfig: GlobalConfig, genParams: GenParams) {
+    const signal = serverAbortController.signal;
     const response = await fetch(globalConfig.api_url + "/v1/chat/completions",
       {
         method: "POST",
@@ -19,7 +21,8 @@ export default async function* infer(messages: MessageType[], globalConfig: Glob
           "add_generation_prompt": true,
           "temperature_last": true,
           ...genParams
-        })
+        }),
+        signal: signal
       }
     )
     const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()

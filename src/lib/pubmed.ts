@@ -1,6 +1,9 @@
 "use server"
 
+import { serverAbortController } from "./abort"
+
 export async function pubMedSearch (query: string, category: string, max_results: number = 5, sort: string = "relevance") {
+    const signal = serverAbortController.signal
     const baseURL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?"
 
     // Parse query
@@ -13,6 +16,7 @@ export async function pubMedSearch (query: string, category: string, max_results
     for (const term of query.split(",")) {
         parsed_query = `${parsed_query} AND "${term.trim()}"[tw]`
     }
+    signal.throwIfAborted();
 
     const r = await fetch(baseURL + new URLSearchParams({
         db: "pubmed",
@@ -24,7 +28,8 @@ export async function pubMedSearch (query: string, category: string, max_results
     {
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36"
-        }
+        },
+        signal: signal
     })
     if (r.status != 200) {
         throw Error("PubMed query failed. Please inform the user and then answer to the best of your ability.")
@@ -34,6 +39,7 @@ export async function pubMedSearch (query: string, category: string, max_results
 }
 
 export async function fetchAbstracts (ids: string[]) {
+    const signal = serverAbortController.signal
     const baseURL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?"
     const r = await fetch(baseURL + new URLSearchParams({
         db: "pubmed",
@@ -44,7 +50,8 @@ export async function fetchAbstracts (ids: string[]) {
     {
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.82 Safari/537.36"
-        }
+        },
+        signal: signal
     })
     if (r.status != 200) {
         throw Error("PubMed query failed. Please inform the user and then answer to the best of your ability.")

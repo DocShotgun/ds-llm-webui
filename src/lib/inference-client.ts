@@ -15,7 +15,7 @@ export default async function* infer_client(messages: MessageType[], globalConfi
             "globalConfig": globalConfig,
             "genParams": genParams
           }),
-          signal
+          signal: signal
         }
       )
       const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()

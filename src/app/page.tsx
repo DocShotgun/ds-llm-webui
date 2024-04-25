@@ -69,6 +69,7 @@ import tool_use from "@/lib/function-calling"
 import { GenParams, GlobalConfig, MessageType, ToolStatus } from "@/types/default"
 import infer_client from "@/lib/inference-client"
 import parse_macros from "@/lib/prompter"
+import { abort_exec, abort_init } from "@/lib/abort-client"
 
 export let globalConfig: GlobalConfig = {
   api_url: "http://127.0.0.1:5000", // default API URL
@@ -153,11 +154,11 @@ export default function Home() {
       setMessages(updatedMessages);
       let response = "";
       let tool_output;
-      abortController.signal.throwIfAborted()
+      abortController.signal.throwIfAborted();
       if (useTools) {
         tool_output = await(tool_use(updatedMessages, globalConfig, functionList, toolStatus));
       };
-      abortController.signal.throwIfAborted()
+      abortController.signal.throwIfAborted();
       if (tool_output) {
         updatedMessages = [...updatedMessages, { role: "system", content: tool_output}];
         setMessages(updatedMessages);
@@ -192,6 +193,7 @@ export default function Home() {
     if (inputValue.length == 0) return;
     setIsGenerating(true);
     abortController = new AbortController();
+    abort_init();
     sendMessage(inputValue);
     setInputValue("");
   }
@@ -481,6 +483,7 @@ export default function Home() {
                   </Button>
                   <Button id="stopButton" type="button" size="icon" className="ml-auto hidden" disabled={!isGenerating} onClick={() => {
                     abortController.abort();
+                    abort_exec();
                     }}>
                     <Ban className="ml-auto mr-auto size-4" />
                     <span className="sr-only">Stop</span>
