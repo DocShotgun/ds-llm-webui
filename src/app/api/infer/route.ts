@@ -1,5 +1,3 @@
-"use server"
-
 import infer from "@/lib/inference";
 
 function iteratorToStream(iterator: any) {
