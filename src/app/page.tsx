@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from "react"
 import {
+  Ban,
   CornerDownLeft,
   Mic,
   Moon,
   Paperclip,
   Settings2,
   Sun,
+  Trash,
   Triangle,
   Wrench,
 } from "lucide-react"
@@ -75,6 +77,7 @@ export let globalConfig: GlobalConfig = {
   system_prompt_parsed: "",
 }
 export let functionList: Array<{ name: string ; description: string ; params: object}> = []
+let abortController = new AbortController();
 
 export default function Home() {
 
@@ -127,40 +130,68 @@ export default function Home() {
     }
   }, [messages, lastmessage])
 
-  const sendMessage = async (message: string) => {
-    globalConfig.system_prompt_parsed = parse_macros(globalConfig.system_prompt);
-    let updatedMessages = [...messages, { role: "user", content: message }];
-    setMessages(updatedMessages);
-    let response = "";
-    let tool_output;
-    if (useTools) {
-      tool_output = await(tool_use(updatedMessages, globalConfig, functionList, toolStatus));
-    };
-    if (tool_output) {
-      updatedMessages = [...updatedMessages, { role: "system", content: tool_output}];
-      setMessages(updatedMessages);
-      const responseGenerator = infer_client(updatedMessages, globalConfig, genParams);
-      for await (const chunk of responseGenerator) {
-        response += chunk;
-        setLastMessage([{role: "assistant", content: response}]);
-      };
+  useEffect(() => {
+    const submitButton = document.getElementById("submitButton")
+    const stopButton = document.getElementById("stopButton")
+    if (submitButton && stopButton) {
+      if (isGenerating) {
+        submitButton.classList.add("hidden")
+        stopButton.classList.remove("hidden")
+      }
+      else {
+        submitButton.classList.remove("hidden")
+        stopButton.classList.add("hidden")
+      }
     }
-    else {
-      const responseGenerator = infer_client(updatedMessages, globalConfig, genParams);
-      for await (const chunk of responseGenerator) {
-        response += chunk;
-        setLastMessage([{role: "assistant", content: response}]);
+  }, [isGenerating])
+
+  async function sendMessage(message: string) {
+    const oldMessages = messages;
+    try {    
+      globalConfig.system_prompt_parsed = parse_macros(globalConfig.system_prompt);
+      let updatedMessages = [...messages, { role: "user", content: message }];
+      setMessages(updatedMessages);
+      let response = "";
+      let tool_output;
+      abortController.signal.throwIfAborted()
+      if (useTools) {
+        tool_output = await(tool_use(updatedMessages, globalConfig, functionList, toolStatus));
       };
-    };
-    setLastMessage([]);
-    setMessages([...updatedMessages, { role: "assistant", content: response }]);
-    SaveChat([...updatedMessages, { role: "assistant", content: response }]);
-    setIsGenerating(false);
+      abortController.signal.throwIfAborted()
+      if (tool_output) {
+        updatedMessages = [...updatedMessages, { role: "system", content: tool_output}];
+        setMessages(updatedMessages);
+        const responseGenerator = infer_client(updatedMessages, globalConfig, genParams, abortController.signal);
+        for await (const chunk of responseGenerator) {
+          response += chunk;
+          setLastMessage([{role: "assistant", content: response}]);
+        };
+      }
+      else {
+        const responseGenerator = infer_client(updatedMessages, globalConfig, genParams, abortController.signal);
+        for await (const chunk of responseGenerator) {
+          response += chunk;
+          setLastMessage([{role: "assistant", content: response}]);
+        };
+      };
+      setLastMessage([]);
+      setMessages([...updatedMessages, { role: "assistant", content: response }]);
+      SaveChat([...updatedMessages, { role: "assistant", content: response }]);
+      setIsGenerating(false);
+    }
+    catch {
+      console.log('Generation failed or aborted');
+      setLastMessage([]);
+      setMessages(oldMessages);
+      SaveChat(oldMessages);
+      setIsGenerating(false);
+    }
   };
 
   const handleSubmit = () => {
     if (inputValue.length == 0) return;
     setIsGenerating(true);
+    abortController = new AbortController();
     sendMessage(inputValue);
     setInputValue("");
   }
@@ -423,7 +454,7 @@ export default function Home() {
                 }}
               />
               <div className="flex items-center p-2.5 justify-between">
-                <div>
+                <div className="space-x-2">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button variant="ghost" size="icon" className="hidden">
@@ -444,14 +475,21 @@ export default function Home() {
                   </Tooltip>
                 </div>
                 <div className="space-x-2">
-                  <Button type="button" size="sm" className="ml-auto gap-1.5" disabled={isGenerating} onClick={handleSubmit}>
-                    Send
-                    <CornerDownLeft className="size-3.5" />
+                  <Button id="submitButton" type="button" size="icon" className="ml-auto" disabled={isGenerating} onClick={handleSubmit}>
+                    <CornerDownLeft className="ml-auto mr-auto size-4" />
+                    <span className="sr-only">Send</span>
+                  </Button>
+                  <Button id="stopButton" type="button" size="icon" className="ml-auto hidden" disabled={!isGenerating} onClick={() => {
+                    abortController.abort();
+                    }}>
+                    <Ban className="ml-auto mr-auto size-4" />
+                    <span className="sr-only">Stop</span>
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button type="button" variant="destructive" size="sm" className="ml-auto gap-1.5" disabled={isGenerating}>
-                        Clear
+                      <Button type="button" variant="destructive" size="icon" className="ml-auto gap-1.5" disabled={isGenerating}>
+                      <Trash className="ml-auto mr-auto size-4" />
+                      <span className="sr-only">Clear</span>
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>

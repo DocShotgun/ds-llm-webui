@@ -3,7 +3,7 @@
 
 import { GenParams, GlobalConfig, MessageType } from "@/types/default";
 
-export default async function* infer_client(messages: MessageType[], globalConfig: GlobalConfig, genParams: GenParams) {
+export default async function* infer_client(messages: MessageType[], globalConfig: GlobalConfig, genParams: GenParams, signal: AbortSignal) {
     const response = await fetch("/api/infer",
         {
           method: "POST",
@@ -14,7 +14,8 @@ export default async function* infer_client(messages: MessageType[], globalConfi
             "messages": messages,
             "globalConfig": globalConfig,
             "genParams": genParams
-          })
+          }),
+          signal
         }
       )
       const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
