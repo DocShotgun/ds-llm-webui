@@ -70,6 +70,7 @@ import { GenParams, GlobalConfig, MessageType, Tool, ToolStatus } from "@/types/
 import infer_client from "@/lib/inference-client"
 import parse_macros from "@/lib/prompter"
 import { abort_exec, abort_init } from "@/lib/abort-client"
+import { get_model_params } from "@/lib/api-tools"
 
 export let globalConfig: GlobalConfig = {
   api_url: "http://127.0.0.1:5000", // default API URL
@@ -113,6 +114,11 @@ export default function Home() {
   useEffect(() => {
     const getConfig = async () => {
       globalConfig = await(LoadConfig());
+      try {
+        const model_params = await get_model_params(globalConfig.api_url, globalConfig.api_key);
+        globalConfig.max_seq_len = model_params.max_seq_len;
+      }
+      catch {}
       setGenParams({...genParams, ...globalConfig.default_samplers});
       setToolStatus({...toolStatus, ...globalConfig.default_tools});
     }
