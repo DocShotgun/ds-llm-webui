@@ -6,6 +6,7 @@ A simple tool-use assistant for local LLMs powered by TabbyAPI. This should be c
 - Function calling framework via constrained generation using JSON schema
 - Internet search using DuckDuckGo for search-augmented generation
 - Extract the text content of a webpage for augmented generation
+- Search a configured set of RSS feeds for updated news (URLs must be provided in config.json as an array of strings)
 - Use the Wolfram Alpha LLM API for relevant queries
 - Search PubMed via the NCBI E-utilities API for relevant queries
 
