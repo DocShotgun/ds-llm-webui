@@ -7,6 +7,7 @@ import { scrape, shorten } from "./scrape";
 import { fetchAbstracts, pubMedSearch } from "./pubmed";
 import { shorten_prompt } from "./tokenization";
 import { serverAbortController } from "./abort";
+import { rss_news_get } from "./newsfeed";
 
 export default async function tool_use(messages: MessageType[], globalConfig: GlobalConfig, functionList: Tool[], toolStatus: ToolStatus) {
 
@@ -71,6 +72,32 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
         return null
     }
 
+    // Use chosen_func to execute function call for functions with no params
+    let function_output = "No tool results available. Please inform the user and then answer to the best of your ability."
+    if (chosen_fn == "newsfeed") {
+      try {
+        let results = ""
+        let article_list: { title: string, link: string, summary: string }[] = []
+        if (globalConfig.newsfeed_rss_sources.length > 0) {
+          for (const source of globalConfig.newsfeed_rss_sources) {
+            article_list = [...article_list, ...await(rss_news_get(source, 5))]
+          }
+          for (const article of article_list) {
+            let text = `${article.title ? article.title : ""}${article.link ? `\nURL: ${article.link}` : ""}${article.summary ? `\n${article.summary}` : ""}`
+            results = results == "" ? text : `${results}\n***\n${text}`
+          }
+          function_output = `Use the following newsfeed results to augment your response:\n<results>\n${results}\n</results>`
+        }
+        else {
+          function_output = "No newsfeed sources available. Please apologize and inform the user."
+        }
+      }
+      catch {
+        function_output = "Newsfeed query failed. Please apologize and inform the user."
+      }
+      return function_output
+    }
+
     // Ask the model for tool params
     let param_prompt = ""
     let param_guide = ""
@@ -123,7 +150,6 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
     signal.throwIfAborted();
 
     // Use chosen_func and chosen_params to execute function call
-    let function_output = "No tool results available. Please inform the user and then answer to the best of your ability."
     if (chosen_fn == "wolfram_alpha") {
       try {
         const results = await(getWolfram(chosen_params.query, globalConfig.wolfram_appid))

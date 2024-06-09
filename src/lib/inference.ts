@@ -31,6 +31,7 @@ export default async function* infer(messages: MessageType[], globalConfig: Glob
       while (true) {
         const {value, done} = await reader.read();
         if (done) break;
+        if (value.includes('"content":""')) break; // Hacky fix for JSON syntax error sometimes on gen end
         if (value.startsWith("data: ")) {
           const parsedvalue = value.replace("data: ", "");
           const chunk = JSON.parse(parsedvalue).choices[0];

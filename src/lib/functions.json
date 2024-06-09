@@ -27,6 +27,11 @@
         ]
     },
     {
+        "name": "newsfeed",
+        "description": "This tool returns a list of the latest news headlines along with source URLs.",
+        "params": []
+    },
+    {
         "name": "wolfram_alpha",
         "description": "This uses Wolfram Alpha to solve a math-adjacent query and returns the result.",
         "params": [

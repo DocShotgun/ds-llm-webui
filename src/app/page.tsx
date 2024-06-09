@@ -77,6 +77,7 @@ export let globalConfig: GlobalConfig = {
   system_prompt: "",
   system_prompt_parsed: "",
   response_prefix: "",
+  newsfeed_rss_sources: []
 }
 export let functionList: Tool[] = []
 let abortController = new AbortController();
@@ -104,6 +105,7 @@ export default function Home() {
     directly_answer: true,
     web_search: true,
     grab_text: true,
+    newsfeed: true,
     wolfram_alpha: true,
     pubmed_search: true
   });
@@ -381,6 +383,12 @@ export default function Home() {
                     <Label htmlFor="grab-text" className="w-1/2 px-2.5">Website Scrape</Label>
                     <Switch className="ml-auto" checked={toolStatus.grab_text} disabled={!useTools} onCheckedChange={(checked) => {
                       setToolStatus({...toolStatus, grab_text: checked});
+                    }}/>
+                  </div>
+                  <div className="flex py-5">
+                    <Label htmlFor="newsfeed" className="w-1/2 px-2.5">Newsfeed Search</Label>
+                    <Switch className="ml-auto" checked={toolStatus.newsfeed} disabled={!useTools} onCheckedChange={(checked) => {
+                      setToolStatus({...toolStatus, newsfeed: checked});
                     }}/>
                   </div>
                   <div className="flex py-5">
