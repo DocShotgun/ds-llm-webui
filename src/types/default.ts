@@ -16,4 +16,17 @@ export type GenParams = { [key:string] : any }
 
 export type ToolStatus = { [key:string] : boolean }
 
+export type Tool = {
+  name: string;
+  description: string;
+  params: ToolParam[];
+}
+
+export type ToolParam = {
+  name: string;
+  description: string;
+  type: string;
+  enum?: any[];
+}
+
 export type MessageType = { role: string, content: string }

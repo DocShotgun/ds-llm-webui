@@ -26,15 +26,17 @@ export default async function* infer(messages: MessageType[], globalConfig: Glob
         signal: signal
       }
     )
-    const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
-    while (true) {
-      const {value, done} = await reader.read();
-      if (done) break;
-      if (value.startsWith("data: ")) {
-        const parsedvalue = value.replace("data: ", "");
-        const chunk = JSON.parse(parsedvalue).choices[0];
-        if (chunk.finish_reason) break;
-        yield chunk.delta.content;
+    if (response.body) {
+      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+      while (true) {
+        const {value, done} = await reader.read();
+        if (done) break;
+        if (value.startsWith("data: ")) {
+          const parsedvalue = value.replace("data: ", "");
+          const chunk = JSON.parse(parsedvalue).choices[0];
+          if (chunk.finish_reason) break;
+          yield chunk.delta.content;
+        }
       }
     }
   }

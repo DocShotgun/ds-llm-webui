@@ -1,6 +1,6 @@
 "use server"
 
-import { GlobalConfig, MessageType, ToolStatus } from "@/types/default";
+import { GlobalConfig, MessageType, Tool, ToolParam, ToolStatus } from "@/types/default";
 import { getWolfram } from "./wolframalpha";
 import { webSearch } from "./websearch";
 import { scrape, shorten } from "./scrape";
@@ -8,13 +8,13 @@ import { fetchAbstracts, pubMedSearch } from "./pubmed";
 import { shorten_prompt } from "./tokenization";
 import { serverAbortController } from "./abort";
 
-export default async function tool_use(messages: MessageType[], globalConfig: GlobalConfig, functionList: Array<{ name: string ; description: string ; params: object}>, toolStatus: ToolStatus) {
+export default async function tool_use(messages: MessageType[], globalConfig: GlobalConfig, functionList: Tool[], toolStatus: ToolStatus) {
 
     // Set abort controller
     const signal = serverAbortController.signal;
 
     // Determine available tools
-    let activeTools: Array<{ name: string ; description: string ; params: object}> = [];
+    let activeTools: Tool[] = [];
     for (const fn of functionList) {
       if (toolStatus[fn.name]) {
         activeTools = [...activeTools, fn]
@@ -25,7 +25,7 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
 
     // Ask the model which tool to use
     let tool_use_prompt = "Given the preceding context and the following list of available tools, select the most appropriate tool to facilitate answering the user's request. Respond in JSON:"
-    let fn_names: Array<string> = []
+    let fn_names: string[] = []
     for (const fn of activeTools) {
         tool_use_prompt = `${tool_use_prompt}\n\nTool: ${fn.name}\nDescription: ${fn.description}`
         fn_names = [...fn_names, fn.name]
@@ -73,13 +73,18 @@ export default async function tool_use(messages: MessageType[], globalConfig: Gl
 
     // Ask the model for tool params
     let param_prompt = ""
-    let chosen_fn_params: {[key:string] : {[key : string]: string | string[]}} = {}
+    let param_guide = ""
+    let chosen_fn_params: { [key:string] : { type: string, enum?: any[] } } = {}
     const chosen_fn_obj = functionList.find((element) => element.name == chosen_fn)
     if (chosen_fn_obj) {
-      param_prompt = `Given the preceding context, select the most appropriate parameters for the tool "${chosen_fn}" to facilitate answering the user's most recent request. Respond in JSON:\n\nTool: ${chosen_fn}\nDescription: ${chosen_fn_obj.description}\nParameters: ${JSON.stringify(chosen_fn_obj.params, null, 2)}`;
-      for (const param in chosen_fn_obj.params) {
-        chosen_fn_params[param] = { "type": "string" }
+      for (const param of chosen_fn_obj.params) {
+        param_guide += `\n  ${param.name}: ${param.description}`
+        chosen_fn_params[param.name] = {type: param.type}
+        if (param.enum) {
+          Object.assign(chosen_fn_params[param.name], {enum: param.enum})
+        }
       }
+      param_prompt = `Given the preceding context, select the most appropriate parameters for the tool "${chosen_fn}" to facilitate answering the user's most recent request. Respond in JSON:\n\nTool: ${chosen_fn}\nDescription: ${chosen_fn_obj.description}\nParameters:${param_guide}`;
     }
     const params_schema = {
         "type": "object",

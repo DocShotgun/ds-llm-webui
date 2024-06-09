@@ -18,10 +18,12 @@ export default async function* infer_client(messages: MessageType[], globalConfi
           signal: signal
         }
       )
-      const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
-      while (true) {
-        const {value, done} = await reader.read();
-        if (done) break;
-        yield value;
+      if (response.body) {
+        const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+        while (true) {
+          const {value, done} = await reader.read();
+          if (done) break;
+          yield value;
+        }
       }
   }

@@ -66,7 +66,7 @@ import { Switch } from "@/components/ui/switch"
 import { LoadChat, LoadConfig, LoadFunctions, SaveChat } from "@/lib/file-handler"
 import MessageBubble from "@/components/ui/message-bubble"
 import tool_use from "@/lib/function-calling"
-import { GenParams, GlobalConfig, MessageType, ToolStatus } from "@/types/default"
+import { GenParams, GlobalConfig, MessageType, Tool, ToolStatus } from "@/types/default"
 import infer_client from "@/lib/inference-client"
 import parse_macros from "@/lib/prompter"
 import { abort_exec, abort_init } from "@/lib/abort-client"
@@ -78,7 +78,7 @@ export let globalConfig: GlobalConfig = {
   system_prompt_parsed: "",
   response_prefix: "",
 }
-export let functionList: Array<{ name: string ; description: string ; params: object}> = []
+export let functionList: Tool[] = []
 let abortController = new AbortController();
 
 export default function Home() {
