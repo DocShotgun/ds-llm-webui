@@ -1,8 +1,8 @@
-import { resetAbort } from "@/lib/abort"
+import { resetAbort } from "@/lib/abort";
 
 export async function GET() {
-    resetAbort();
-    return new Response();
+  resetAbort();
+  return new Response();
 }
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";

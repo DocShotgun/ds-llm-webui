@@ -1,8 +1,8 @@
-import { serverAbortController } from "@/lib/abort"
+import { serverAbortController } from "@/lib/abort";
 
 export async function GET() {
-    serverAbortController.abort();
-    return new Response();
+  serverAbortController.abort();
+  return new Response();
 }
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
